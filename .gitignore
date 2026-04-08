@@ -1,5 +1,9 @@
 *
 !.gitignore
+!.python-version
+!Makefile
+!pyproject.toml
+!uv.lock
 !*.xcf
 !*.png
 !*.jpeg

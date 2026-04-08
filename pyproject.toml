@@ -1,0 +1,9 @@
+[project]
+name = "card-game-pics"
+version = "0.1.0"
+description = "Generate card game PNGs from XCF templates"
+requires-python = ">=3.14"
+dependencies = [
+    "rich>=14.3.3",
+    "typer>=0.24.1",
+]

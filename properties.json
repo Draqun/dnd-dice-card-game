@@ -1,16 +1,148 @@
 {
 	"defaults": {
 		"Name": {
-			"font": "EB Garamond Bold",
+			"font": "Noto Serif",
 			"size": 12.5,
-			"color": [176, 113, 82],
+			"color": [
+				176,
+				113,
+				82
+			],
 			"center_x": 400,
 			"center_y": 124
+		},
+		"Dice": {
+			"font": "Noto Sans Devanagari Bold Italic",
+			"size": 11,
+			"color": [
+				46,
+				75,
+				93
+			],
+			"center_x": 400,
+			"center_y": 1031
 		}
 	},
 	"pl": {
 		"bears/1.xcf": {
-			"Name": "Słodziak pospolity"
+			"Name": "",
+			"Dice": ""
+		},
+		"bears/2.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"bears/3.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"bears/4.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"bears/5.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"cats/1.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"cats/2.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"cats/3.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"cats/4.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"cats/5.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"dinosaurs/1.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"dinosaurs/2.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"dinosaurs/3.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"dinosaurs/4.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"dinosaurs/5.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"godzilla/1.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"godzilla/2.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"godzilla/3.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"godzilla/4.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"godzilla/5.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"monsters/1.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"monsters/2.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"monsters/3.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"monsters/4.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"monsters/5.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"rats/1.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"rats/2.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"rats/3.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"rats/4.xcf": {
+			"Name": "",
+			"Dice": ""
+		},
+		"rats/5.xcf": {
+			"Name": "",
+			"Dice": ""
 		}
 	}
 }

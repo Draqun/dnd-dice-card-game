@@ -36,6 +36,30 @@ please generate for me pixel art card game in fanasty style with dinosaur as a h
 https://perchance.org/ai-pixel-art-generator
 ```
 
+## Card Generation
+
+A Python script generates card PNGs from XCF templates with text layers defined in `properties.json`.
+
+### Prerequisites
+
+```bash
+# System dependencies
+sudo apt install gimp fonts-ebgaramond fonts-firacode
+
+# Python tooling
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### Usage
+
+```bash
+make init              # verify all dependencies
+make generate          # generate cards (Polish, default)
+CARD_LANG=en make generate  # generate for another language
+make generate-all      # generate all languages
+make clean             # remove output/
+```
+
 ## Files
 
 - `.jpeg` files - Generated pixel art images
