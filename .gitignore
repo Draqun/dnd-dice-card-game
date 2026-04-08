@@ -1,0 +1,10 @@
+*
+!.gitignore
+!*.xcf
+!*.png
+!*.jpeg
+!*.py
+!*.md
+!*.json
+!*.txt
+!LICENSE

@@ -1,0 +1,16 @@
+{
+	"defaults": {
+		"Name": {
+			"font": "EB Garamond Bold",
+			"size": 12.5,
+			"color": [176, 113, 82],
+			"center_x": 400,
+			"center_y": 124
+		}
+	},
+	"pl": {
+		"bears/1.xcf": {
+			"Name": "Słodziak pospolity"
+		}
+	}
+}
