@@ -25,128 +25,124 @@
 	},
 	"pl": {
 		"bears/1.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Słodziak pospolity",
+			"Dice": "1k4"
 		},
 		"bears/2.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Podróżnik puchaty",
+			"Dice": "1k6"
 		},
 		"bears/3.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Pluszowy maruder",
+			"Dice": "1k8"
 		},
 		"bears/4.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Przytulaśny wojownik",
+			"Dice": "1k10"
 		},
 		"bears/5.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Waleczny przytulak",
+			"Dice": "1k12"
 		},
 		"cats/1.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Magiczny mruczek",
+			"Dice": "1k4"
 		},
 		"cats/2.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Waleczny burek",
+			"Dice": "1k6"
 		},
 		"cats/3.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Mędrzec dachowy",
+			"Dice": "1k8"
 		},
 		"cats/4.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Szponiasty samuraj",
+			"Dice": "1k10"
 		},
 		"cats/5.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Czarodziejska puchatka",
+			"Dice": "1k12"
 		},
 		"dinosaurs/1.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Łuskowaty tyromir",
+			"Dice": "1k4"
 		},
 		"dinosaurs/2.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Drapieżny rogodent",
+			"Dice": "1k6"
 		},
 		"dinosaurs/3.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Zbrojny jaszczusław",
+			"Dice": "1k8"
 		},
 		"dinosaurs/4.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Tyrodont maruder",
+			"Dice": "1k10"
 		},
 		"dinosaurs/5.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Zębozarł szlachetny",
+			"Dice": "1k12"
 		},
 		"godzilla/1.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Dwugłowy niszczyciel",
+			"Dice": "1k4"
 		},
 		"godzilla/2.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Podmorski pazurnik",
+			"Dice": "1k6"
 		},
 		"godzilla/3.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Kosynier zachodu",
+			"Dice": "1k8"
 		},
 		"godzilla/4.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Wojownik zaćmienia",
+			"Dice": "1k10"
 		},
 		"godzilla/5.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Niszczyciel wieczny",
+			"Dice": "1k12"
 		},
 		"monsters/1.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Zbrojarz mały",
+			"Dice": "1k4"
 		},
 		"monsters/2.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Łobuz powietrzny",
+			"Dice": "1k6"
 		},
 		"monsters/3.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Drapieżnik powszechny",
+			"Dice": "1k8"
 		},
 		"monsters/4.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Rogacz rozbójnik",
+			"Dice": "1k10"
 		},
 		"monsters/5.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Prastary drapak",
+			"Dice": "1k12"
 		},
 		"rats/1.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Szczurosław normalny",
+			"Dice": "1k4"
 		},
 		"rats/2.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Ratomir wędrowny",
+			"Dice": "1k6"
 		},
 		"rats/3.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Sławorat samuraj",
+			"Dice": "1k8"
 		},
 		"rats/4.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Kanalarz watażka",
+			"Dice": "1k10"
 		},
 		"rats/5.xcf": {
-			"Name": "",
-			"Dice": ""
-		},
-		"bears/6.xcf": {
-			"Name": "",
-			"Dice": ""
+			"Name": "Dziurosław mądry",
+			"Dice": "1k12"
 		}
 	}
 }
