@@ -1,7 +1,7 @@
 # Makefile for card-game-pics
 # Generate card PNGs from XCF templates + properties.json
 
-.PHONY: help init generate generate-all init-properties format clean
+.PHONY: help init generate generate-all init-properties sync-xcf format clean
 
 # Colors
 RED    := \033[0;31m
@@ -67,6 +67,9 @@ generate-all: ## Generate card PNGs for all languages
 
 init-properties: ## Generate default properties.json (use CARD_LANG=xx to add language section)
 	@uv run generate_cards.py init-properties $(if $(filter-out pl,$(CARD_LANG)),--lang "$(CARD_LANG)",)
+
+sync-xcf: ## Add new XCF files to properties.json (use CARD_LANG=xx, default: pl)
+	@uv run generate_cards.py sync-xcf --lang "$(CARD_LANG)"
 
 format: ## Format Python code with black
 	@uv run black .

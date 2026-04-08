@@ -415,5 +415,43 @@ def init_properties(
     )
 
 
+@app.command("sync-xcf")
+def sync_xcf(
+    lang: str = typer.Option("pl", help="Language section to sync"),
+):
+    """Add new XCF files from project directories to existing properties.json."""
+    if not os.path.exists(PROPERTIES_PATH):
+        console.print(
+            "[bold red]Error:[/] properties.json not found. Run [cyan]init-properties[/] first."
+        )
+        raise typer.Exit(1)
+
+    with open(PROPERTIES_PATH) as f:
+        props = json.load(f)
+
+    if lang not in props:
+        props[lang] = {}
+
+    existing = set(props[lang].keys())
+    all_xcf = set(scan_xcf_files())
+    new_xcf = sorted(all_xcf - existing)
+
+    if not new_xcf:
+        console.print(f"[green]No new XCF files found for [cyan]{lang}[/].[/]")
+        raise typer.Exit(0)
+
+    layer_names = list(LAYER_DEFAULTS)
+    for xcf in new_xcf:
+        props[lang][xcf] = {name: "" for name in layer_names}
+
+    with open(PROPERTIES_PATH, "w") as f:
+        json.dump(props, f, indent="\t", ensure_ascii=False)
+        f.write("\n")
+
+    console.print(f"Added [cyan]{len(new_xcf)}[/] new XCF file(s) to [cyan]{lang}[/]:")
+    for xcf in new_xcf:
+        console.print(f"  [green]+[/] {xcf}")
+
+
 if __name__ == "__main__":
     app()
