@@ -125,11 +125,11 @@
 			"Dice": "1k12"
 		},
 		"rats/1.xcf": {
-			"Name": "Szczurosław normalny",
+			"Name": "Ratomir wędrowny",
 			"Dice": "1k4"
 		},
 		"rats/2.xcf": {
-			"Name": "Ratomir wędrowny",
+			"Name": "Szczurosław normalny",
 			"Dice": "1k6"
 		},
 		"rats/3.xcf": {
