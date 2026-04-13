@@ -44,6 +44,10 @@
 			"Name": "Waleczny przytulak",
 			"Dice": "1k12"
 		},
+		"bears/6.xcf": {
+			"Name": "Milutki mistrz",
+			"Dice": "1k20"
+		},
 		"cats/1.xcf": {
 			"Name": "Magiczny mruczek",
 			"Dice": "1k4"
@@ -63,6 +67,10 @@
 		"cats/5.xcf": {
 			"Name": "Czarodziejska puchatka",
 			"Dice": "1k12"
+		},
+		"cats/6.xcf": {
+			"Name": "Ogniomistrz wąsaty",
+			"Dice": "1k20"
 		},
 		"dinosaurs/1.xcf": {
 			"Name": "Łuskowaty tyromir",
@@ -84,6 +92,10 @@
 			"Name": "Zębozarł szlachetny",
 			"Dice": "1k12"
 		},
+		"dinosaurs/6.xcf": {
+			"Name": "Gładoskór naczelny",
+			"Dice": "1k20"
+		},
 		"godzilla/1.xcf": {
 			"Name": "Dwugłowy niszczyciel",
 			"Dice": "1k4"
@@ -103,6 +115,10 @@
 		"godzilla/5.xcf": {
 			"Name": "Niszczyciel wieczny",
 			"Dice": "1k12"
+		},
+		"godzilla/6.xcf": {
+			"Name": "Łuskowaty hetman",
+			"Dice": "1k20"
 		},
 		"monsters/1.xcf": {
 			"Name": "Zbrojarz mały",
@@ -124,6 +140,10 @@
 			"Name": "Prastary drapak",
 			"Dice": "1k12"
 		},
+		"monsters/6.xcf": {
+			"Name": "Pomiot leśny",
+			"Dice": "1k20"
+		},
 		"rats/1.xcf": {
 			"Name": "Ratomir wędrowny",
 			"Dice": "1k4"
@@ -143,6 +163,10 @@
 		"rats/5.xcf": {
 			"Name": "Dziurosław mądry",
 			"Dice": "1k12"
+		},
+		"rats/6.xcf": {
+			"Name": "Major Wąsisław",
+			"Dice": "1k20"
 		}
 	}
 }
