@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "Generate card game PNGs from XCF templates"
 requires-python = ">=3.14"
 dependencies = [
+    "pillow>=11.0.0",
+    "reportlab>=4.2.0",
     "rich>=14.3.3",
     "typer>=0.24.1",
 ]

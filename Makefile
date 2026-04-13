@@ -1,7 +1,7 @@
 # Makefile for card-game-pics
 # Generate card PNGs from XCF templates + properties.json
 
-.PHONY: help init generate generate-all init-properties sync-xcf format clean
+.PHONY: help init generate generate-all init-properties sync-xcf print print-test print-no-backs make-back format clean
 
 # Colors
 RED    := \033[0;31m
@@ -70,6 +70,18 @@ init-properties: ## Generate default properties.json (use CARD_LANG=xx to add la
 
 sync-xcf: ## Add new XCF files to properties.json (use CARD_LANG=xx, default: pl)
 	@uv run generate_cards.py sync-xcf --lang "$(CARD_LANG)"
+
+print: ## Build print-ready PDF (A4, 3x3, MTG size, duplex; CARD_LANG=xx)
+	@uv run print_sheets.py generate --lang "$(CARD_LANG)"
+
+print-test: ## Build single-page alignment test PDF (1 front + 1 back)
+	@uv run print_sheets.py generate --lang "$(CARD_LANG)" --test-page
+
+print-no-backs: ## Build fronts-only PDF (for sleeves, no duplex)
+	@uv run print_sheets.py generate --lang "$(CARD_LANG)" --no-backs
+
+make-back: ## (Re)generate the default card_back.png placeholder
+	@uv run print_sheets.py make-back --force
 
 format: ## Format Python code with black
 	@uv run black .
