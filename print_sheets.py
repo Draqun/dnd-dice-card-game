@@ -25,9 +25,9 @@ BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "output"
 DEFAULT_BACK = BASE_DIR / "card_back.png"
 
-# --- Physical dimensions (MTG / Poker size) ---
-CARD_W_MM = 63.0
-CARD_H_MM = 88.0
+# --- Physical dimensions (MTG / Poker size: 2.5" × 3.5") ---
+CARD_W_MM = 63.5
+CARD_H_MM = 88.9
 DPI = 300
 
 # Target pixel size at 300 DPI
@@ -41,12 +41,12 @@ SRC_H = 1200
 # Bleed geometry — pixels from source edge to the trim line.
 # Sandy bleed measured from card PNGs: L=50, R=35, T=17, B=6 px.
 # Trim must stay within the sandy area so green frame is never cut.
-# Trim: 843 × 1177 (≈ MTG aspect 63/88, difference < 0.05%)
-CROP_LEFT = 17
-CROP_RIGHT = 16
+# Trim: 841 × 1177 (≈ MTG aspect 63.5/88.9, difference < 0.025%)
+CROP_LEFT = 18
+CROP_RIGHT = 17
 CROP_TOP = 17
 CROP_BOTTOM = 6
-CROPPED_W = SRC_W - CROP_LEFT - CROP_RIGHT  # 843
+CROPPED_W = SRC_W - CROP_LEFT - CROP_RIGHT  # 841
 CROPPED_H = SRC_H - CROP_TOP - CROP_BOTTOM  # 1177
 
 # Bleed in mm (derived from pixel bleed and trim→physical mapping)
