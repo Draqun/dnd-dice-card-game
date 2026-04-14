@@ -4,12 +4,12 @@
 			"font": "Noto Serif",
 			"size": 12.5,
 			"color": [
-				176,
-				113,
-				82
+				46,
+				75,
+				93
 			],
-			"center_x": 400,
-			"center_y": 124
+			"center_x": 447,
+			"center_y": 105
 		},
 		"Dice": {
 			"font": "Noto Sans Devanagari Bold Italic",
@@ -19,8 +19,8 @@
 				75,
 				93
 			],
-			"center_x": 400,
-			"center_y": 1031
+			"center_x": 447,
+			"center_y": 1060
 		}
 	},
 	"pl": {

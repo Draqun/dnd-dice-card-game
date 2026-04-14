@@ -34,17 +34,32 @@ DPI = 300
 CARD_W_PX = round(CARD_W_MM / 25.4 * DPI)  # 744
 CARD_H_PX = round(CARD_H_MM / 25.4 * DPI)  # 1039
 
-# Source card dimensions (from output/*.png)
-SRC_W = 800
+# Source card dimensions (from output/*.png) — new template with bleed
+SRC_W = 876
 SRC_H = 1200
 
-# Symmetric crop (top/bottom) to match MTG aspect ratio
-# target aspect: 63/88 = 0.71591; source: 800/1200 = 0.66667
-# cropped_h = 800 / (63/88) = 1117.46 -> 1117
-# total crop = 83 px -> 42 top + 41 bottom
-CROP_TOP = 42
-CROP_BOTTOM = 41
-CROPPED_H = SRC_H - CROP_TOP - CROP_BOTTOM  # 1117
+# Bleed geometry — pixels from source edge to the trim line.
+# Sandy bleed measured from card PNGs: L=50, R=35, T=17, B=6 px.
+# Trim must stay within the sandy area so green frame is never cut.
+# Trim: 843 × 1177 (≈ MTG aspect 63/88, difference < 0.05%)
+CROP_LEFT = 17
+CROP_RIGHT = 16
+CROP_TOP = 17
+CROP_BOTTOM = 6
+CROPPED_W = SRC_W - CROP_LEFT - CROP_RIGHT  # 843
+CROPPED_H = SRC_H - CROP_TOP - CROP_BOTTOM  # 1177
+
+# Bleed in mm (derived from pixel bleed and trim→physical mapping)
+BLEED_LEFT_MM = CROP_LEFT / CROPPED_W * CARD_W_MM    # ~3.0 mm
+BLEED_RIGHT_MM = CROP_RIGHT / CROPPED_W * CARD_W_MM  # ~3.0 mm
+BLEED_TOP_MM = CROP_TOP / CROPPED_H * CARD_H_MM      # ~3.3 mm
+BLEED_BOTTOM_MM = CROP_BOTTOM / CROPPED_H * CARD_H_MM  # ~3.2 mm
+
+# Full card size with bleed (image placed at this size; trim area = CARD_W/H_MM)
+FULL_W_MM = CARD_W_MM + BLEED_LEFT_MM + BLEED_RIGHT_MM
+FULL_H_MM = CARD_H_MM + BLEED_TOP_MM + BLEED_BOTTOM_MM
+FULL_W_PX = round(FULL_W_MM / 25.4 * DPI)
+FULL_H_PX = round(FULL_H_MM / 25.4 * DPI)
 
 # --- Layout (A4) ---
 PAGE_W_MM, PAGE_H_MM = 210.0, 297.0
@@ -57,13 +72,11 @@ GOLD = (196, 146, 82)
 GOLD_BRIGHT = (224, 180, 112)
 
 
-def _crop_and_resize(img: Image.Image) -> Image.Image:
-    """Crop source card symmetrically to MTG aspect and resize to target DPI."""
+def _resize_with_bleed(img: Image.Image) -> Image.Image:
+    """Resize source card to print DPI, keeping bleed intact."""
     if img.size != (SRC_W, SRC_H):
-        # Defensive: enforce expected source
         img = img.resize((SRC_W, SRC_H), Image.LANCZOS)
-    cropped = img.crop((0, CROP_TOP, SRC_W, SRC_H - CROP_BOTTOM))
-    return cropped.resize((CARD_W_PX, CARD_H_PX), Image.LANCZOS)
+    return img.resize((FULL_W_PX, FULL_H_PX), Image.LANCZOS)
 
 
 def _find_cards(lang: str) -> list[Path]:
@@ -202,29 +215,41 @@ def _draw_crop_marks(
     bottom: float,
     card_w: float,
     card_h: float,
-    gap: float,
+    h_gap: float,
+    v_gap: float,
     cols: int,
     rows: int,
+    bleed_l: float = 0,
+    bleed_r: float = 0,
+    bleed_t: float = 0,
+    bleed_b: float = 0,
 ) -> None:
-    """Draw crop marks at outer corners of the grid."""
-    mark_len = 4 * mm
-    mark_offset = 1 * mm  # distance from card edge
+    """Draw crop marks at every card trim boundary for cutting guidance.
+
+    Marks are placed outside the tile area (trim + bleed) so they sit
+    in the page margin, not on the card images.
+    """
+    page_w, page_h = A4
     c.setStrokeColorRGB(0, 0, 0)
     c.setLineWidth(0.3)
-    grid_w = cols * card_w + (cols - 1) * gap
-    grid_h = rows * card_h + (rows - 1) * gap
-    corners = [
-        (left, bottom),                            # BL
-        (left + grid_w, bottom),                   # BR
-        (left, bottom + grid_h),                   # TL
-        (left + grid_w, bottom + grid_h),          # TR
-    ]
-    for x, y in corners:
-        # Horizontal tick (pointing outward)
-        dx = -1 if x == left else 1
-        dy = -1 if y == bottom else 1
-        c.line(x + dx * mark_offset, y, x + dx * (mark_offset + mark_len), y)
-        c.line(x, y + dy * mark_offset, x, y + dy * (mark_offset + mark_len))
+
+    v_cuts: list[float] = []
+    for col in range(cols):
+        x0 = left + col * (card_w + h_gap)
+        v_cuts.append(x0)
+        v_cuts.append(x0 + card_w)
+
+    h_cuts: list[float] = []
+    for row in range(rows):
+        y0 = bottom + row * (card_h + v_gap)
+        h_cuts.append(y0)
+        h_cuts.append(y0 + card_h)
+
+    for x in v_cuts:
+        c.line(x, 0, x, page_h)
+
+    for y in h_cuts:
+        c.line(0, y, page_w, y)
 
 
 def _grid_positions(
@@ -284,7 +309,7 @@ def generate(
     back: Optional[Path] = typer.Option(
         None, help="Custom back image (default: ./card_back.png, auto-generated if missing)"
     ),
-    gap_mm: float = typer.Option(0.0, help="Gap in mm between cards on the sheet"),
+    gap_mm: float = typer.Option(0.0, help="Gap in mm between card trim areas on the sheet"),
     flip: str = typer.Option("long", help="Duplex flip edge: 'long' or 'short'"),
     test_page: bool = typer.Option(
         False, "--test-page", help="Generate a single-page alignment test (1 front + 1 back)"
@@ -328,8 +353,9 @@ def generate(
     table = Table(title="Print sheet configuration", show_header=False)
     table.add_row("Language", lang)
     table.add_row("Cards found", str(len(card_paths)))
-    table.add_row("Card size", f"{CARD_W_MM}×{CARD_H_MM} mm ({CARD_W_PX}×{CARD_H_PX} px @ {DPI}DPI)")
-    table.add_row("Crop (top/bottom)", f"{CROP_TOP}/{CROP_BOTTOM} px")
+    table.add_row("Trim size", f"{CARD_W_MM}×{CARD_H_MM} mm ({CARD_W_PX}×{CARD_H_PX} px @ {DPI}DPI)")
+    table.add_row("Bleed (l/r/t/b)", f"{BLEED_LEFT_MM:.1f}/{BLEED_RIGHT_MM:.1f}/{BLEED_TOP_MM:.1f}/{BLEED_BOTTOM_MM:.1f} mm")
+    table.add_row("Full card", f"{FULL_W_MM:.1f}×{FULL_H_MM:.1f} mm (with bleed)")
     table.add_row("Grid", f"{COLS}×{ROWS} ({CARDS_PER_PAGE}/page)")
     table.add_row("Gap", f"{gap_mm} mm")
     table.add_row("Backs", "no" if no_backs else f"yes (flip={flip})")
@@ -339,11 +365,28 @@ def generate(
     back_img = _load_back(back_path)
     back_reader = _pil_to_reader(back_img, use_jpeg=jpeg)
 
-    # Layout math
-    grid_w_mm = COLS * CARD_W_MM + (COLS - 1) * gap_mm
-    grid_h_mm = ROWS * CARD_H_MM + (ROWS - 1) * gap_mm
-    left_mm = (PAGE_W_MM - grid_w_mm) / 2
-    bottom_mm = (PAGE_H_MM - grid_h_mm) / 2
+    # Layout: tile full card images (with bleed) on the page
+    tile_grid_w = COLS * FULL_W_MM + (COLS - 1) * gap_mm
+    tile_grid_h = ROWS * FULL_H_MM + (ROWS - 1) * gap_mm
+    tile_left = (PAGE_W_MM - tile_grid_w) / 2
+    tile_bottom = (PAGE_H_MM - tile_grid_h) / 2
+
+    # Trim grid for crop marks and back placement
+    trim_left = tile_left + BLEED_LEFT_MM
+    trim_bottom = tile_bottom + BLEED_BOTTOM_MM
+    trim_h_gap = BLEED_RIGHT_MM + gap_mm + BLEED_LEFT_MM
+    trim_v_gap = BLEED_BOTTOM_MM + gap_mm + BLEED_TOP_MM
+
+    # Reading-order positions (row 0 = top)
+    tile_pos: list[tuple[float, float]] = []
+    trim_pos: list[tuple[float, float]] = []
+    for row in range(ROWS):
+        ty = tile_bottom + (ROWS - 1 - row) * (FULL_H_MM + gap_mm)
+        for col in range(COLS):
+            tx = tile_left + col * (FULL_W_MM + gap_mm)
+            tile_pos.append((tx * mm, ty * mm))
+            trim_pos.append(((tx + BLEED_LEFT_MM) * mm,
+                             (ty + BLEED_BOTTOM_MM) * mm))
 
     c = rl_canvas.Canvas(str(output), pagesize=A4)
 
@@ -354,46 +397,52 @@ def generate(
 
     for page_indices in pages:
         # --- FRONT PAGE ---
-        positions = _grid_positions(
-            left_mm, bottom_mm, CARD_W_MM, CARD_H_MM, gap_mm, COLS, ROWS
-        )
         for slot, card_idx in enumerate(page_indices):
-            x, y = positions[slot]
+            tx, ty = tile_pos[slot]
             img = Image.open(card_paths[card_idx]).convert("RGB")
-            img = _crop_and_resize(img)
+            img = _resize_with_bleed(img)
             c.drawImage(
                 _pil_to_reader(img, use_jpeg=jpeg),
-                x, y,
-                width=CARD_W_MM * mm, height=CARD_H_MM * mm,
+                tx, ty,
+                width=FULL_W_MM * mm, height=FULL_H_MM * mm,
             )
         if crop_marks:
-            _draw_crop_marks(c, left_mm * mm, bottom_mm * mm,
+            _draw_crop_marks(c,
+                             trim_left * mm, trim_bottom * mm,
                              CARD_W_MM * mm, CARD_H_MM * mm,
-                             gap_mm * mm, COLS, ROWS)
+                             trim_h_gap * mm, trim_v_gap * mm,
+                             COLS, ROWS,
+                             bleed_l=BLEED_LEFT_MM * mm,
+                             bleed_r=BLEED_RIGHT_MM * mm,
+                             bleed_t=BLEED_TOP_MM * mm,
+                             bleed_b=BLEED_BOTTOM_MM * mm)
         c.showPage()
 
         # --- BACK PAGE ---
         if no_backs:
             continue
-        # Pad page_indices to full grid (empty slots won't get a back)
-        filled_slots = list(range(len(page_indices)))
-        # Pad with sentinel -1 for empty slots
         fronts_order = page_indices + [-1] * (CARDS_PER_PAGE - len(page_indices))
         back_order = _mirror_backs_for_duplex(fronts_order, COLS, ROWS, flip)
 
         for slot, card_idx in enumerate(back_order):
             if card_idx < 0:
                 continue
-            x, y = positions[slot]
+            bx, by = trim_pos[slot]
             c.drawImage(
                 back_reader,
-                x, y,
+                bx, by,
                 width=CARD_W_MM * mm, height=CARD_H_MM * mm,
             )
         if crop_marks:
-            _draw_crop_marks(c, left_mm * mm, bottom_mm * mm,
+            _draw_crop_marks(c,
+                             trim_left * mm, trim_bottom * mm,
                              CARD_W_MM * mm, CARD_H_MM * mm,
-                             gap_mm * mm, COLS, ROWS)
+                             trim_h_gap * mm, trim_v_gap * mm,
+                             COLS, ROWS,
+                             bleed_l=BLEED_LEFT_MM * mm,
+                             bleed_r=BLEED_RIGHT_MM * mm,
+                             bleed_t=BLEED_TOP_MM * mm,
+                             bleed_b=BLEED_BOTTOM_MM * mm)
         c.showPage()
 
     c.save()

@@ -3,6 +3,7 @@
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -45,16 +46,16 @@ LAYER_DEFAULTS: dict[str, LayerSettings] = {
     "Name": LayerSettings(
         font="Noto Serif",
         size=12.5,
-        color=[176, 113, 82],
-        center_x=400,
-        center_y=124,
+        color=[46, 75, 93],
+        center_x=447,
+        center_y=105,
     ),
     "Dice": LayerSettings(
         font="Noto Sans Devanagari Bold Italic",
         size=11,
         color=[46, 75, 93],
-        center_x=400,
-        center_y=1031,
+        center_x=447,
+        center_y=1060,
     ),
 }
 
@@ -451,6 +452,231 @@ def sync_xcf(
     console.print(f"Added [cyan]{len(new_xcf)}[/] new XCF file(s) to [cyan]{lang}[/]:")
     for xcf in new_xcf:
         console.print(f"  [green]+[/] {xcf}")
+
+
+# --- Template-application command ---
+
+
+def build_apply_template_script(
+    template_path: str,
+    target_w: int,
+    target_h: int,
+    trim_w: int,
+    trim_h: int,
+    card_paths: list[str],
+    old_layer_name: str,
+    new_layer_name: str,
+) -> str:
+    """Build Script-Fu that:
+
+    1. Loads template, scales its single layer proportionally to fit within
+       (trim_w × trim_h) preserving the template's own aspect ratio (no crop).
+    2. Computes (offset_x, offset_y) that centers the scaled template on the
+       target canvas — resulting bleed = (target - trim) / 2 on each side.
+    3. For each card XCF: resizes canvas to target only if smaller (centering
+       existing layers), removes old top layer by name, copies scaled template
+       layer in at (offset_x, offset_y).
+    4. Saves each XCF in place.
+    """
+    lines: list[str] = []
+    lines.append("(let* (")
+    lines.append(f'  (template (car (gimp-file-load RUN-NONINTERACTIVE'
+                 f' "{escape_sf(template_path)}" "{escape_sf(os.path.basename(template_path))}")))')
+    lines.append(f"  (tmpl-w (car (gimp-image-width template)))")
+    lines.append(f"  (tmpl-h (car (gimp-image-height template)))")
+    # Uniform scale: fit inside (trim_w, trim_h) without distortion or crop
+    lines.append(f"  (s-w (/ {trim_w}.0 tmpl-w))")
+    lines.append(f"  (s-h (/ {trim_h}.0 tmpl-h))")
+    lines.append(f"  (scale (min s-w s-h))")
+    lines.append(f"  (scaled-w (round (* tmpl-w scale)))")
+    lines.append(f"  (scaled-h (round (* tmpl-h scale)))")
+    lines.append(f"  (offset-x (quotient (- {target_w} scaled-w) 2))")
+    lines.append(f"  (offset-y (quotient (- {target_h} scaled-h) 2)))")
+    lines.append(f"  (gimp-image-scale template scaled-w scaled-h)")
+    lines.append("")
+
+    for card_path in card_paths:
+        lines.append(f"  ;; --- card: {card_path} ---")
+        lines.append(f'  (let* ((card (car (gimp-file-load RUN-NONINTERACTIVE'
+                     f' "{escape_sf(card_path)}" "{escape_sf(os.path.basename(card_path))}")))')
+        lines.append(f"         (card-w (car (gimp-image-width card)))")
+        lines.append(f"         (card-h (car (gimp-image-height card))))")
+        # Only resize canvas if smaller than target (idempotent re-runs)
+        lines.append(f"    (when (or (< card-w {target_w}) (< card-h {target_h}))")
+        lines.append(f"      (gimp-image-resize card {target_w} {target_h}")
+        lines.append(f"                         (quotient (- {target_w} card-w) 2)")
+        lines.append(f"                         (quotient (- {target_h} card-h) 2)))")
+        # Remove old frame layer by name (if present)
+        lines.append(f'    (let* ((old-layer (car (gimp-image-get-layer-by-name card "{escape_sf(old_layer_name)}"))))')
+        lines.append(f"      (when (>= old-layer 0)")
+        lines.append(f"        (gimp-image-remove-layer card old-layer)))")
+        # Copy template layer in as new top-of-stack
+        lines.append(f"    (let* ((tmpl-frame (vector-ref (cadr (gimp-image-get-layers template)) 0))")
+        lines.append(f"           (new-layer (car (gimp-layer-new-from-drawable tmpl-frame card))))")
+        lines.append(f"      (gimp-image-insert-layer card new-layer 0 -1)")
+        lines.append(f'      (gimp-item-set-name new-layer "{escape_sf(new_layer_name)}")')
+        lines.append(f"      (gimp-layer-set-offsets new-layer offset-x offset-y))")
+        # Save XCF in place
+        lines.append(f"    (gimp-xcf-save RUN-NONINTERACTIVE card")
+        lines.append(f"                   (car (gimp-image-get-active-drawable card))")
+        lines.append(f'                   "{escape_sf(card_path)}" "{escape_sf(os.path.basename(card_path))}")')
+        lines.append(f"    (gimp-image-delete card))")
+        lines.append("")
+
+    lines.append("  (gimp-image-delete template))")
+    return "\n".join(lines)
+
+
+def find_card_xcfs(category: Optional[str] = None) -> list[str]:
+    """Find all card XCFs (numeric stems like 1.xcf, 2.xcf, ...).
+
+    Returns absolute paths.
+    """
+    cards: list[str] = []
+    for rel in scan_xcf_files():
+        # Skip root-level templates
+        parts = rel.split(os.sep)
+        if len(parts) < 2:
+            continue
+        if category and parts[0] != category:
+            continue
+        stem = os.path.splitext(parts[-1])[0]
+        if not stem.isdigit():
+            continue
+        cards.append(os.path.join(BASE_DIR, rel))
+    return sorted(cards)
+
+
+@app.command("apply-template")
+def apply_template(
+    template: str = typer.Option(
+        ..., help="Path to template XCF (e.g. template3.xcf)"
+    ),
+    card: Optional[str] = typer.Option(
+        None, help="Process only this card (e.g. bears/1.xcf). Default: all numeric XCFs."
+    ),
+    category: Optional[str] = typer.Option(
+        None, help="Process only cards in this category (e.g. bears). Default: all."
+    ),
+    target_width: int = typer.Option(876, help="Target canvas width in px (incl. bleed)"),
+    target_height: int = typer.Option(1200, help="Target canvas height in px (incl. bleed)"),
+    trim_width: int = typer.Option(800, help="Trim (printed) width in px — template scales to fit"),
+    trim_height: int = typer.Option(1117, help="Trim (printed) height in px — template scales to fit"),
+    old_layer: str = typer.Option("Frame", help="Name of the existing top layer to replace"),
+    new_layer: str = typer.Option("Frame", help="Name to assign to the new layer"),
+    no_backup: bool = typer.Option(
+        False, "--no-backup", help="Skip creating .xcf.bak backups (NOT recommended)"
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show plan but don't run"),
+) -> None:
+    """Resize card XCFs and replace top layer with frame from a template XCF.
+
+    Each card XCF: canvas resized to (target_width × target_height) with content
+    centered horizontally, the layer named OLD_LAYER is removed, and the layer
+    from TEMPLATE is scaled-and-cropped to fit then inserted on top as NEW_LAYER.
+    """
+    template_path = os.path.join(BASE_DIR, template) if not os.path.isabs(template) else template
+    if not os.path.exists(template_path):
+        console.print(f"[bold red]Error:[/] template not found: {template_path}")
+        raise typer.Exit(1)
+
+    # Collect target cards
+    if card:
+        card_full = os.path.join(BASE_DIR, card) if not os.path.isabs(card) else card
+        if not os.path.exists(card_full):
+            console.print(f"[bold red]Error:[/] card not found: {card_full}")
+            raise typer.Exit(1)
+        cards = [card_full]
+    else:
+        cards = find_card_xcfs(category=category)
+
+    if not cards:
+        console.print("[yellow]No card XCFs found to process.[/]")
+        raise typer.Exit(0)
+
+    # Plan summary
+    table = Table(title="Apply template plan", show_header=False)
+    table.add_row("Template", os.path.relpath(template_path, BASE_DIR))
+    table.add_row("Cards", str(len(cards)))
+    table.add_row("Target canvas", f"{target_width} × {target_height} px")
+    table.add_row("Trim (fit-to)", f"{trim_width} × {trim_height} px")
+    table.add_row("Replace layer", f'"{old_layer}" → "{new_layer}"')
+    table.add_row("Backup", "no" if no_backup else "yes (.xcf.bak)")
+    console.print(table)
+    console.print()
+    for c in cards:
+        console.print(f"  [cyan]·[/] {os.path.relpath(c, BASE_DIR)}")
+    console.print()
+
+    if dry_run:
+        console.print("[yellow]--dry-run: nothing executed.[/]")
+        raise typer.Exit(0)
+
+    # Backup
+    if not no_backup:
+        for c in cards:
+            backup = c + ".bak"
+            shutil.copy2(c, backup)
+        console.print(f"[green]✓[/] Backed up {len(cards)} file(s) → *.xcf.bak")
+
+    # Build & run Script-Fu
+    script_lines = ["(gimp-message-set-handler 2)"]
+    script_lines.append(
+        build_apply_template_script(
+            template_path,
+            target_width,
+            target_height,
+            trim_width,
+            trim_height,
+            cards,
+            old_layer,
+            new_layer,
+        )
+    )
+    script_lines.append("(gimp-quit 0)")
+    script = "\n".join(script_lines)
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".scm", delete=False) as f:
+        f.write(script)
+        script_path = f.name
+
+    console.log(f"Script-Fu saved to {script_path}")
+
+    try:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Running GIMP batch...", total=None)
+            result = subprocess.run(
+                ["gimp", "-i", "-b", f'(load "{script_path}")'],
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+            progress.update(task, completed=1, total=1)
+
+        if result.returncode != 0:
+            console.print(
+                Panel(
+                    f"GIMP exited with code {result.returncode}\nScript: {script_path}",
+                    title="Error", style="red",
+                )
+            )
+            if result.stderr:
+                for line in result.stderr.splitlines():
+                    if "error" in line.lower() or "Error" in line:
+                        console.print(f"  [dim]{line}[/]")
+            raise typer.Exit(1)
+
+        console.print(f"\n[bold green]Done![/] Updated {len(cards)} XCF file(s).")
+        if not no_backup:
+            console.print("[dim]Backups available at *.xcf.bak — remove with: find . -name '*.xcf.bak' -delete[/]")
+    finally:
+        if result.returncode == 0:
+            os.unlink(script_path)
 
 
 if __name__ == "__main__":
