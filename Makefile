@@ -1,7 +1,7 @@
 # Makefile for card-game-pics
 # Generate card PNGs from XCF templates + properties.json
 
-.PHONY: help init generate generate-all init-properties sync-xcf print print-test print-no-backs make-back format clean
+.PHONY: help init generate generate-all init-properties sync-xcf apply-frame print print-test print-no-backs make-back format clean
 
 # Colors
 RED    := \033[0;31m
@@ -12,6 +12,7 @@ RESET  := \033[0m
 BOLD   := \033[1m
 
 CARD_LANG ?= pl
+FRAME_SRC ?= frame.xcf
 
 help: ## Show this help message
 	@echo "$(BOLD)Card Game Pics$(RESET) — generate card PNGs from XCF templates"
@@ -70,6 +71,9 @@ init-properties: ## Generate default properties.json (use CARD_LANG=xx to add la
 
 sync-xcf: ## Add new XCF files to properties.json (use CARD_LANG=xx, default: pl)
 	@uv run generate_cards.py sync-xcf --lang "$(CARD_LANG)"
+
+apply-frame: ## Copy frame layer from FRAME_SRC to all cards (default: bears/1.xcf)
+	@uv run generate_cards.py apply-template --template "$(FRAME_SRC)"
 
 print: ## Build print-ready PDF (A4, 3x3, MTG size, duplex; CARD_LANG=xx)
 	@uv run print_sheets.py generate --lang "$(CARD_LANG)"

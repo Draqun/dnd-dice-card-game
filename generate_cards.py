@@ -484,15 +484,17 @@ def build_apply_template_script(
                  f' "{escape_sf(template_path)}" "{escape_sf(os.path.basename(template_path))}")))')
     lines.append(f"  (tmpl-w (car (gimp-image-width template)))")
     lines.append(f"  (tmpl-h (car (gimp-image-height template)))")
-    # Uniform scale: fit inside (trim_w, trim_h) without distortion or crop
+    # Uniform scale: cover (trim_w, trim_h) — scale-to-fill, excess hangs off canvas
     lines.append(f"  (s-w (/ {trim_w}.0 tmpl-w))")
     lines.append(f"  (s-h (/ {trim_h}.0 tmpl-h))")
-    lines.append(f"  (scale (min s-w s-h))")
+    lines.append(f"  (scale (max s-w s-h))")
     lines.append(f"  (scaled-w (round (* tmpl-w scale)))")
     lines.append(f"  (scaled-h (round (* tmpl-h scale)))")
     lines.append(f"  (offset-x (quotient (- {target_w} scaled-w) 2))")
     lines.append(f"  (offset-y (quotient (- {target_h} scaled-h) 2)))")
     lines.append(f"  (gimp-image-scale template scaled-w scaled-h)")
+    # Clip template layer to canvas bounds (preserves alpha, no white fill)
+    lines.append(f"  (gimp-layer-resize-to-image-size (vector-ref (cadr (gimp-image-get-layers template)) 0))")
     lines.append("")
 
     for card_path in card_paths:
@@ -560,8 +562,8 @@ def apply_template(
     ),
     target_width: int = typer.Option(876, help="Target canvas width in px (incl. bleed)"),
     target_height: int = typer.Option(1200, help="Target canvas height in px (incl. bleed)"),
-    trim_width: int = typer.Option(800, help="Trim (printed) width in px — template scales to fit"),
-    trim_height: int = typer.Option(1117, help="Trim (printed) height in px — template scales to fit"),
+    trim_width: int = typer.Option(876, help="Trim (printed) width in px — template scales to fit"),
+    trim_height: int = typer.Option(1200, help="Trim (printed) height in px — template scales to fit"),
     old_layer: str = typer.Option("Frame", help="Name of the existing top layer to replace"),
     new_layer: str = typer.Option("Frame", help="Name to assign to the new layer"),
     no_backup: bool = typer.Option(
