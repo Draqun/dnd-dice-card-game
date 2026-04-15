@@ -1,7 +1,7 @@
 # Makefile for card-game-pics
 # Generate card PNGs from XCF templates + properties.json
 
-.PHONY: help init generate generate-all init-properties sync-xcf apply-frame print print-test print-no-backs make-back format clean
+.PHONY: help init generate generate-all init-properties sync-xcf apply-frame print print-full-marks print-test print-no-backs make-back format clean
 
 # Colors
 RED    := \033[0;31m
@@ -77,6 +77,9 @@ apply-frame: ## Copy frame layer from FRAME_SRC to all cards (default: bears/1.x
 
 print: ## Build print-ready PDF (A4, 3x3, MTG size, duplex; CARD_LANG=xx)
 	@uv run print_sheets.py generate --lang "$(CARD_LANG)"
+
+print-full-marks: ## Build print-ready PDF with full-page crop marks (lines across sheet)
+	@uv run print_sheets.py generate-with-crop-marks --lang "$(CARD_LANG)"
 
 print-test: ## Build single-page alignment test PDF (1 front + 1 back)
 	@uv run print_sheets.py generate --lang "$(CARD_LANG)" --test-page

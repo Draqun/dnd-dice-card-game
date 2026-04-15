@@ -37,7 +37,7 @@
 			"Dice": "1k8"
 		},
 		"bears/4.xcf": {
-			"Name": "Przytulaśny wojownik",
+			"Name": "Przytulas waleczny",
 			"Dice": "1k10"
 		},
 		"bears/5.xcf": {
@@ -65,7 +65,7 @@
 			"Dice": "1k10"
 		},
 		"cats/5.xcf": {
-			"Name": "Czarodziejska puchatka",
+			"Name": "Drapieżna puchatka",
 			"Dice": "1k12"
 		},
 		"cats/6.xcf": {
@@ -129,7 +129,7 @@
 			"Dice": "1k6"
 		},
 		"monsters/3.xcf": {
-			"Name": "Drapieżnik powszechny",
+			"Name": "Wielorog pospolity",
 			"Dice": "1k8"
 		},
 		"monsters/4.xcf": {
@@ -149,7 +149,7 @@
 			"Dice": "1k4"
 		},
 		"rats/2.xcf": {
-			"Name": "Szczurosław normalny",
+			"Name": "Wąsosław normalny",
 			"Dice": "1k6"
 		},
 		"rats/3.xcf": {

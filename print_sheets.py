@@ -223,33 +223,49 @@ def _draw_crop_marks(
     bleed_r: float = 0,
     bleed_t: float = 0,
     bleed_b: float = 0,
+    style: str = "short",
+    mark_len: float = 3 * mm,
 ) -> None:
     """Draw crop marks at every card trim boundary for cutting guidance.
 
-    Marks are placed outside the tile area (trim + bleed) so they sit
-    in the page margin, not on the card images.
+    style="short": short L-shaped ticks at each trim corner, extending outward
+        into the bleed area only (does not cross the card image).
+    style="full": straight lines running through the whole page at every trim
+        axis — easier to align a long ruler against, but visible across cards.
     """
     page_w, page_h = A4
     c.setStrokeColorRGB(0, 0, 0)
     c.setLineWidth(0.3)
 
-    v_cuts: list[float] = []
+    # Per-column trim x with side label (which side of the card this edge is)
+    col_trims: list[tuple[float, str]] = []
     for col in range(cols):
         x0 = left + col * (card_w + h_gap)
-        v_cuts.append(x0)
-        v_cuts.append(x0 + card_w)
+        col_trims.append((x0, "left"))
+        col_trims.append((x0 + card_w, "right"))
 
-    h_cuts: list[float] = []
+    row_trims: list[tuple[float, str]] = []
     for row in range(rows):
         y0 = bottom + row * (card_h + v_gap)
-        h_cuts.append(y0)
-        h_cuts.append(y0 + card_h)
+        row_trims.append((y0, "bottom"))
+        row_trims.append((y0 + card_h, "top"))
 
-    for x in v_cuts:
-        c.line(x, 0, x, page_h)
+    if style == "full":
+        for x, _ in col_trims:
+            c.line(x, 0, x, page_h)
+        for y, _ in row_trims:
+            c.line(0, y, page_w, y)
+        return
 
-    for y in h_cuts:
-        c.line(0, y, page_w, y)
+    # "short": at each trim corner draw an L-shape extending outward into bleed.
+    for x, x_side in col_trims:
+        for y, y_side in row_trims:
+            dx = -mark_len if x_side == "left" else mark_len
+            dy = -mark_len if y_side == "bottom" else mark_len
+            # Tick along the horizontal trim line, going outward in x
+            c.line(x, y, x + dx, y)
+            # Tick along the vertical trim line, going outward in y
+            c.line(x, y, x, y + dy)
 
 
 def _grid_positions(
@@ -318,6 +334,10 @@ def generate(
         False, "--no-backs", help="Skip back pages (fronts only, e.g. for sleeves)"
     ),
     crop_marks: bool = typer.Option(True, help="Draw crop marks at grid corners"),
+    full_crop_marks: bool = typer.Option(
+        False, "--full-crop-marks",
+        help="Draw crop marks as full lines across the page instead of short corner ticks.",
+    ),
     jpeg: bool = typer.Option(
         False, "--jpeg",
         help="Embed cards as JPEG (smaller PDF, mild edge artifacts). Default: PNG (lossless).",
@@ -415,7 +435,8 @@ def generate(
                              bleed_l=BLEED_LEFT_MM * mm,
                              bleed_r=BLEED_RIGHT_MM * mm,
                              bleed_t=BLEED_TOP_MM * mm,
-                             bleed_b=BLEED_BOTTOM_MM * mm)
+                             bleed_b=BLEED_BOTTOM_MM * mm,
+                             style="full" if full_crop_marks else "short")
         c.showPage()
 
         # --- BACK PAGE ---
@@ -442,12 +463,50 @@ def generate(
                              bleed_l=BLEED_LEFT_MM * mm,
                              bleed_r=BLEED_RIGHT_MM * mm,
                              bleed_t=BLEED_TOP_MM * mm,
-                             bleed_b=BLEED_BOTTOM_MM * mm)
+                             bleed_b=BLEED_BOTTOM_MM * mm,
+                             style="full" if full_crop_marks else "short")
         c.showPage()
 
     c.save()
     console.print(f"[green]✓ Wrote[/green] {output} ([bold]{len(pages)}[/bold] front pages"
                   + ("" if no_backs else f" + {len(pages)} back pages") + ")")
+
+
+@app.command("generate-with-crop-marks")
+def generate_with_crop_marks(
+    lang: str = typer.Option("pl", help="Language subdirectory under output/"),
+    output: Optional[Path] = typer.Option(
+        None, help="Output PDF path (default: output/<lang>/print.pdf)"
+    ),
+    back: Optional[Path] = typer.Option(
+        None, help="Custom back image (default: ./card_back.png, auto-generated if missing)"
+    ),
+    gap_mm: float = typer.Option(0.0, help="Gap in mm between card trim areas on the sheet"),
+    flip: str = typer.Option("long", help="Duplex flip edge: 'long' or 'short'"),
+    test_page: bool = typer.Option(
+        False, "--test-page", help="Generate a single-page alignment test (1 front + 1 back)"
+    ),
+    no_backs: bool = typer.Option(
+        False, "--no-backs", help="Skip back pages (fronts only, e.g. for sleeves)"
+    ),
+    jpeg: bool = typer.Option(
+        False, "--jpeg",
+        help="Embed cards as JPEG (smaller PDF, mild edge artifacts). Default: PNG (lossless).",
+    ),
+) -> None:
+    """Like generate, but with full-page crop marks (lines across the entire sheet)."""
+    generate(
+        lang=lang,
+        output=output,
+        back=back,
+        gap_mm=gap_mm,
+        flip=flip,
+        test_page=test_page,
+        no_backs=no_backs,
+        crop_marks=True,
+        full_crop_marks=True,
+        jpeg=jpeg,
+    )
 
 
 @app.command("make-back")
